@@ -1,0 +1,50 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubelet-stats-exporter
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kubelet-stats-exporter
+spec:
+  selector:
+    matchLabels:
+      name: kubelet-stats-exporter
+  template:
+    metadata:
+      labels:
+        name: kubelet-stats-exporter
+      annotations:
+        prometheus.io/scrape: "true"
+    spec:
+      serviceAccountName: kubelet-stats-exporter
+      hostNetwork: true
+      priorityClassName: system-node-critical
+      dnsPolicy: ClusterFirstWithHostNet
+      tolerations:
+        - operator: Exists
+      containers:
+        - name: app
+          image: kubelet-stats-exporter/exporter
+          resources:
+            limits:
+              memory: 50Mi
+              cpu: 20m
+            requests:
+              memory: 50Mi
+              cpu: 20m
+          ports:
+            - name: "stats-metrics"
+              containerPort: 9091
+          env:
+            - name: NODE_HOST
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
+            - name: CA_CRT
+              value: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+            - name: TOKEN
+              value: "/var/run/secrets/kubernetes.io/serviceaccount/token"

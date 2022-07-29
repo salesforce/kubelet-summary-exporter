@@ -1,0 +1,6 @@
+---
+namespace: kubelet-stats-exporter
+resources:
+  - namespace.yaml
+  - rbac.yaml
+  - daemonset.yaml

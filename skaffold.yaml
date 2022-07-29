@@ -1,0 +1,14 @@
+apiVersion:  skaffold/v2beta19
+kind: Config
+build:
+  artifacts:
+  - image: kubelet-stats-exporter/exporter
+    context: ./
+    docker:
+      dockerfile: Dockerfile
+  tagPolicy:
+    inputDigest: {}
+deploy:
+  kustomize:
+    paths:
+    - config/local
