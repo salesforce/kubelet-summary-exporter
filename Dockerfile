@@ -7,5 +7,5 @@ RUN go mod download
 RUN CGO_ENABLED=0 make install
 
 FROM gcr.io/distroless/static-debian11
-COPY --from=build /go/bin/kubelet-stats-exporter /
-CMD ["/kubelet-stats-exporter"]
+COPY --from=build /go/bin/kubelet-summary-exporter /
+CMD ["/kubelet-summary-exporter"]

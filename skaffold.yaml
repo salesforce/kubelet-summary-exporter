@@ -2,7 +2,7 @@ apiVersion:  skaffold/v2beta19
 kind: Config
 build:
   artifacts:
-  - image: kubelet-stats-exporter/exporter
+  - image: kubelet-summary-exporter/exporter
     context: ./
     docker:
       dockerfile: Dockerfile

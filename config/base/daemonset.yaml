@@ -2,24 +2,24 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: kubelet-stats-exporter
+  name: kubelet-summary-exporter
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: kubelet-stats-exporter
+  name: kubelet-summary-exporter
 spec:
   selector:
     matchLabels:
-      name: kubelet-stats-exporter
+      name: kubelet-summary-exporter
   template:
     metadata:
       labels:
-        name: kubelet-stats-exporter
+        name: kubelet-summary-exporter
       annotations:
         prometheus.io/scrape: "true"
     spec:
-      serviceAccountName: kubelet-stats-exporter
+      serviceAccountName: kubelet-summary-exporter
       hostNetwork: true
       priorityClassName: system-node-critical
       dnsPolicy: ClusterFirstWithHostNet
@@ -27,7 +27,7 @@ spec:
         - operator: Exists
       containers:
         - name: app
-          image: kubelet-stats-exporter/exporter
+          image: kubelet-summary-exporter/exporter
           resources:
             limits:
               memory: 50Mi

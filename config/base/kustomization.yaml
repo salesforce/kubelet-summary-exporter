@@ -1,5 +1,5 @@
 ---
-namespace: kubelet-stats-exporter
+namespace: kubelet-summary-exporter
 resources:
   - namespace.yaml
   - rbac.yaml
