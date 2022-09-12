@@ -93,7 +93,7 @@ func (s *Scraper) Collect(ch chan<- prometheus.Metric) {
 				s.storage,
 				prometheus.GaugeValue,
 				float64(usedBytes),
-				summary.Node.NodeName, pod.PodRef.Name, pod.PodRef.Namespace,
+				summary.Node.NodeName, pod.PodRef.Namespace, pod.PodRef.Name, // node, namespace, pod
 			)
 		}
 	}
