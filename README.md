@@ -18,3 +18,19 @@ Running locally:
 ### Deploying
 
 Example manifests are in config: `kubectl kustomize config/base/`
+
+### Configuration
+
+```
+Usage: kubelet-summary-exporter
+
+Flags:
+  -h, --help                   Show context-sensitive help.
+      --prom-listen=":9091"    Address to listen for for Prometheus metrics
+      --node-host=STRING       Address to request kubelet's stats/summary from ($NODE_HOST)
+      --insecure               Don't validate certificates ($INSECURE)
+      --ca=STRING              Certificate location ($CA_CRT)
+      --token-path=STRING      Token location ($TOKEN)
+      --timeout=5s             Timeout for requests ($TIMEOUT)
+      --look-up-hostname       Use api-server to deterimine hostname (assumes in cluster config) ($LOOK_UP_HOSTNAME)
+```

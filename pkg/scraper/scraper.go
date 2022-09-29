@@ -62,6 +62,7 @@ func (s *Scraper) Collect(ch chan<- prometheus.Metric) {
 	}
 	resp, err := client.Do(req)
 	if err != nil {
+		s.logger.Error("failed to make request to stats/summary", zap.Error(err))
 		return
 	}
 
