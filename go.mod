@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/alecthomas/kong v0.7.1
+	github.com/cenkalti/backoff/v4 v4.2.0
 	github.com/google/go-cmp v0.5.9
 	github.com/oklog/run v1.1.0
 	github.com/prometheus/client_golang v1.14.0
