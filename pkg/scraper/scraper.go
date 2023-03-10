@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -60,7 +61,18 @@ func (s *Scraper) Collect(ch chan<- prometheus.Metric) {
 	client := &http.Client{
 		Timeout: s.timeout,
 	}
-	resp, err := client.Do(req)
+
+	var resp *http.Response
+	//
+	b := backoff.NewExponentialBackOff()
+	b.InitialInterval = 1 * time.Second
+	b.MaxInterval = 10 * time.Second
+	b.Multiplier = 3
+	eBackoff := backoff.WithMaxRetries(b, 3)
+	err = backoff.Retry(func() error {
+		resp, err = client.Do(req)
+		return err
+	}, eBackoff)
 	if err != nil {
 		s.logger.Error("failed to make request to stats/summary", zap.Error(err))
 		return
