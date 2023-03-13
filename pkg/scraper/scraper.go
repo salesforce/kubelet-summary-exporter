@@ -13,7 +13,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -24,6 +23,8 @@ type Scraper struct {
 	timeout   time.Duration
 	targetIP  string
 	storage   *prometheus.Desc
+	errors    *prometheus.Desc
+	errCnt    float64
 	logger    *zap.Logger
 }
 
@@ -38,11 +39,17 @@ func NewScraper(logger *zap.Logger, targetIP string, tokenPath string, timeout t
 			"Ephemeral storage used in bytes",
 			[]string{"node", "namespace", "pod"},
 			nil),
+		errors: prometheus.NewDesc(
+			prometheus.BuildFQName("kubelet_summary_exporter", "", "errors"),
+			"Errors scraping kubelet stats summary",
+			[]string{"type"},
+			nil),
 	}
 }
 
 func (s *Scraper) Describe(ch chan<- *prometheus.Desc) {
 	ch <- s.storage
+	ch <- s.errors
 }
 
 func (s *Scraper) Collect(ch chan<- prometheus.Metric) {
@@ -62,36 +69,53 @@ func (s *Scraper) Collect(ch chan<- prometheus.Metric) {
 		Timeout: s.timeout,
 	}
 
-	var resp *http.Response
-	//
-	b := backoff.NewExponentialBackOff()
-	b.InitialInterval = 1 * time.Second
-	b.MaxInterval = 10 * time.Second
-	b.Multiplier = 3
-	eBackoff := backoff.WithMaxRetries(b, 3)
-	err = backoff.Retry(func() error {
-		resp, err = client.Do(req)
-		return err
-	}, eBackoff)
+	resp, err := client.Do(req)
 	if err != nil {
-		s.logger.Error("failed to make request to stats/summary", zap.Error(err))
+		s.errCnt++
+		ch <- prometheus.MustNewConstMetric(
+			s.storage,
+			prometheus.CounterValue,
+			s.errCnt,
+			"request error",
+		)
+		s.logger.Warn("failed to make request to stats/summary", zap.Error(err))
 		return
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		s.logger.Error("got unexpected status for stats/summary", zap.String("status", resp.Status))
+		s.errCnt++
+		ch <- prometheus.MustNewConstMetric(
+			s.storage,
+			prometheus.CounterValue,
+			s.errCnt,
+			"status error",
+		)
+		s.logger.Warn("got unexpected status for stats/summary", zap.String("status", resp.Status))
 		return
 	}
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		s.errCnt++
+		ch <- prometheus.MustNewConstMetric(
+			s.storage,
+			prometheus.CounterValue,
+			s.errCnt,
+			"read body error",
+		)
 		s.logger.Error("failed to read body", zap.Error(err))
 		return
 	}
 
 	summary, err := s.parse(body)
 	if err != nil {
+		ch <- prometheus.MustNewConstMetric(
+			s.storage,
+			prometheus.CounterValue,
+			s.errCnt,
+			"parse body error",
+		)
 		s.logger.Error("failed to parse body", zap.Error(err))
 		return
 	}
