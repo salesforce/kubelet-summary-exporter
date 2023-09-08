@@ -71,7 +71,6 @@ func TestDecodingJson(t *testing.T) {
 			if diff := cmp.Diff(tc.WantSummary, summary); diff != "" {
 				t.Errorf("summary mismatch (-want +got):\n%s", diff)
 			}
-
 		})
 	}
 }
