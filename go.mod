@@ -1,8 +1,6 @@
 module github.com/salesforce/kubelet-summary-exporter
 
-go 1.21
-
-toolchain go1.21.0
+go 1.20
 
 require (
 	github.com/alecthomas/kong v0.7.1
