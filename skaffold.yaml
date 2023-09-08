@@ -1,14 +1,19 @@
-apiVersion:  skaffold/v2beta19
+apiVersion: skaffold/v4beta6
 kind: Config
+metadata:
+  name: kubelet-summary-exporter
 build:
   artifacts:
-  - image: kubelet-summary-exporter/exporter
-    context: ./
-    docker:
-      dockerfile: Dockerfile
-  tagPolicy:
-    inputDigest: {}
-deploy:
+    - image: kubelet-summary-exporter/exporter
+      docker:
+        dockerfile: Dockerfile
+manifests:
   kustomize:
     paths:
-    - config/local
+      - config/base
+profiles:
+  - name: local
+    manifests:
+      kustomize:
+        paths:
+          - config/local

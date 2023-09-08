@@ -5,9 +5,9 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
+	"os"
 	"time"
 
 	"go.uber.org/zap"
@@ -19,7 +19,7 @@ import (
 
 func ConfigureTLS(logger *zap.Logger, certAuthorityFile string, insecure bool, nodeHost string) error {
 	// Set the root CA pool
-	cadata, err := ioutil.ReadFile(certAuthorityFile)
+	cadata, err := os.ReadFile(certAuthorityFile)
 	if err != nil {
 		return err
 	}
