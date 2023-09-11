@@ -11,7 +11,7 @@ Running locally:
 
 1. Docker Desktop (with kubernetes)
 2. skaffold https://skaffold.dev/docs/install/
-3. `skaffold dev`
+3. `skaffold dev -p local`
 4. `kubectl -n kubelet-summary-exporter port-forward ds/kubelet-summary-exporter 9091`
 5. `curl localhost:9091/metrics`
 

@@ -73,7 +73,7 @@ func (s *Scraper) Collect(ch chan<- prometheus.Metric) {
 	if err != nil {
 		s.errCnt++
 		ch <- prometheus.MustNewConstMetric(
-			s.storage,
+			s.errors,
 			prometheus.CounterValue,
 			s.errCnt,
 			"request error",
@@ -85,7 +85,7 @@ func (s *Scraper) Collect(ch chan<- prometheus.Metric) {
 	if resp.StatusCode != http.StatusOK {
 		s.errCnt++
 		ch <- prometheus.MustNewConstMetric(
-			s.storage,
+			s.errors,
 			prometheus.CounterValue,
 			s.errCnt,
 			"status error",
@@ -99,7 +99,7 @@ func (s *Scraper) Collect(ch chan<- prometheus.Metric) {
 	if err != nil {
 		s.errCnt++
 		ch <- prometheus.MustNewConstMetric(
-			s.storage,
+			s.errors,
 			prometheus.CounterValue,
 			s.errCnt,
 			"read body error",
@@ -111,7 +111,7 @@ func (s *Scraper) Collect(ch chan<- prometheus.Metric) {
 	summary, err := s.parse(body)
 	if err != nil {
 		ch <- prometheus.MustNewConstMetric(
-			s.storage,
+			s.errors,
 			prometheus.CounterValue,
 			s.errCnt,
 			"parse body error",
