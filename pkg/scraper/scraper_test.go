@@ -7,7 +7,7 @@
 package scraper
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -59,7 +59,7 @@ func TestDecodingJson(t *testing.T) {
 		},
 	} {
 		t.Run(tc.Name, func(t *testing.T) {
-			ex, err := ioutil.ReadFile(tc.InputFile)
+			ex, err := os.ReadFile(tc.InputFile)
 			if err != nil {
 				t.Fatalf("failed to read test data %+v", err)
 			}
