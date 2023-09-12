@@ -9,10 +9,10 @@ goos="unknown"
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
   goos="linux"
-  golangci_lint_sha256="17c9ca05253efe833d47f38caf670aad2202b5e6515879a99873fabd4c7452b3"
+  golangci_lint_sha256="762ef7c877d9baa4a3ffcc69c88ecf35faf47cd76c1394792d5fecc15f6dc84b"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
   goos="darwin"
-  golangci_lint_sha256="925c4097eae9e035b0b052a66d0a149f861e2ab611a4e677c7ffd2d4e05b9b89"
+  golangci_lint_sha256="04d936f68895a9127999fdfa78872a3245d89dd6900c147dc9106c06870b9c5b"
 fi
 
 srcdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
@@ -25,8 +25,7 @@ fi
 workdir=$(mktemp -d)
 
 function cleanup {
-  echo $workdir
-echo foo #  rm -rf "$workdir"
+  rm -rf "$workdir"
 }
 trap cleanup EXIT
 
