@@ -9,8 +9,9 @@ package scraper
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -59,7 +60,7 @@ func (s *Scraper) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 
-	token, err := ioutil.ReadFile(s.tokenPath)
+	token, err := os.ReadFile(s.tokenPath)
 	if err != nil {
 		s.logger.Fatal("unable to load specified token", zap.String("file", s.tokenPath), zap.Error(err))
 	}
@@ -95,7 +96,7 @@ func (s *Scraper) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		s.errCnt++
 		ch <- prometheus.MustNewConstMetric(
