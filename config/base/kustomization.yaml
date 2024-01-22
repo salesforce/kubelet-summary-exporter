@@ -1,6 +1,0 @@
----
-namespace: kubelet-summary-exporter
-resources:
-  - namespace.yaml
-  - rbac.yaml
-  - daemonset.yaml

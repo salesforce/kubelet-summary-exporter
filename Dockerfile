@@ -2,7 +2,7 @@ FROM golang:1.21.1 as build
 
 WORKDIR /go/src/app
 
-COPY go.* .
+COPY go.* ./
 RUN go mod download
 
 COPY . .
