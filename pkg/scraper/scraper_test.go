@@ -7,12 +7,12 @@
 package scraper
 
 import (
+	"log/slog"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"go.uber.org/zap"
 )
 
 func TestDecodingJson(t *testing.T) {
@@ -63,7 +63,7 @@ func TestDecodingJson(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to read test data %+v", err)
 			}
-			scraper := NewScraper(zap.L(), "", "", 1*time.Microsecond)
+			scraper := NewScraper(slog.Default(), "", "", 1*time.Microsecond)
 			summary, err := scraper.parse(ex)
 			if err != nil {
 				t.Fatalf("failed to parse test data %+v", err)

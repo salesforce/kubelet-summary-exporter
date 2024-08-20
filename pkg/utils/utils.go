@@ -5,19 +5,19 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
 	"time"
 
-	"go.uber.org/zap"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
-func ConfigureTLS(logger *zap.Logger, certAuthorityFile string, insecure bool, nodeHost string) error {
+func ConfigureTLS(certAuthorityFile string, insecure bool, nodeHost string) error {
 	// Set the root CA pool
 	cadata, err := os.ReadFile(certAuthorityFile)
 	if err != nil {
@@ -31,7 +31,7 @@ func ConfigureTLS(logger *zap.Logger, certAuthorityFile string, insecure bool, n
 	newTlsConfig := &tls.Config{}
 	newTlsConfig.RootCAs = certs
 	if insecure {
-		logger.Warn("using insecure tls")
+		slog.Default().Warn("using insecure tls")
 		newTlsConfig.InsecureSkipVerify = insecure
 	}
 
