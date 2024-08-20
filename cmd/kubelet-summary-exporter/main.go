@@ -8,6 +8,7 @@ package main
 
 import (
 	"context"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -20,9 +21,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/salesforce/kubelet-summary-exporter/pkg/scraper"
 	"github.com/salesforce/kubelet-summary-exporter/pkg/utils"
-
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 type CLI struct {
@@ -40,48 +38,44 @@ func main() {
 	_ = kong.Parse(cli)
 	ctx := context.Background()
 
-	zapConfig := zap.NewProductionConfig()
-	zapConfig.EncoderConfig.TimeKey = zapcore.OmitKey
-	zapConfig.EncoderConfig.MessageKey = "message"
+	logger := slog.Default().With(slog.String("app", "kubelet-stats-exporter"))
 
-	logger, err := zapConfig.Build()
-	if err != nil {
-		panic(err)
-	}
-	logger = logger.With(zap.String("app", "kubelet-stats-exporter"))
-
-	if err := utils.ConfigureTLS(logger, cli.CA, cli.Insecure, cli.NodeHost); err != nil {
-		logger.Fatal("unable to configure tls", zap.Error(err))
+	if err := utils.ConfigureTLS(cli.CA, cli.Insecure, cli.NodeHost); err != nil {
+		logger.Error("unable to configure tls", slog.Any("error", err))
+		os.Exit(1)
 	}
 
 	if _, err := os.Stat(cli.TokenPath); os.IsNotExist(err) {
-		logger.Error("token not found", zap.String("file", cli.TokenPath), zap.Error(err))
+		logger.Error("token not found", slog.String("file", cli.TokenPath), slog.Any("error", err))
 	}
 	serverAddr := cli.NodeHost
 	if cli.LookUpHostname {
 		//Handle downward API using a node name that isn't identical to the node's Hostname
 		name, err := utils.ServerAddrFromCluster(cli.NodeHost)
 		if err != nil {
-			logger.Fatal("failed to retrieve in node hostname", zap.Error(err))
+			logger.Error("failed to retrieve in node hostname", slog.Any("error", err))
+			os.Exit(1)
 		} else {
 			serverAddr = name
-			logger.Info("using updated serverAddr for certificate validation", zap.String("hostname", serverAddr), zap.String("original", cli.NodeHost))
+			logger.Info("using updated serverAddr for certificate validation", slog.String("hostname", serverAddr), slog.String("original", cli.NodeHost))
 		}
 	}
 	scraper := scraper.NewScraper(logger, serverAddr, cli.TokenPath, cli.Timeout)
 
 	promRegistry := prometheus.NewRegistry()
-	err = promRegistry.Register(scraper)
+	err := promRegistry.Register(scraper)
 	if err != nil {
-		logger.Fatal("failed to register storage metric")
+		logger.Error("failed to register storage metric")
+		os.Exit(1)
 	}
 
 	promLis, err := net.Listen("tcp", cli.PromListen)
 	if err != nil {
-		logger.Fatal("failed to open prometheus listener",
-			zap.String("prometheus-listen", cli.PromListen),
-			zap.Error(err),
+		logger.Error("failed to open prometheus listener",
+			slog.String("prometheus-listen", cli.PromListen),
+			slog.Any("error", err),
 		)
+		os.Exit(1)
 	}
 
 	promMux := http.NewServeMux()
@@ -105,11 +99,11 @@ func main() {
 	if err := g.Run(); err != nil {
 		if serr, ok := err.(run.SignalError); ok {
 			logger.Info("caught signal",
-				zap.String("signal", serr.Signal.String()),
+				slog.String("signal", serr.Signal.String()),
 			)
 		} else {
 			logger.Error("actor failed",
-				zap.Error(err),
+				slog.Any("error", err),
 			)
 
 			os.Exit(1)

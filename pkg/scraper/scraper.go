@@ -10,13 +10,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 type Scraper struct {
@@ -26,15 +25,15 @@ type Scraper struct {
 	storage   *prometheus.Desc
 	errors    *prometheus.Desc
 	errCnt    float64
-	logger    *zap.Logger
+	logger    *slog.Logger
 }
 
-func NewScraper(logger *zap.Logger, targetIP string, tokenPath string, timeout time.Duration) *Scraper {
+func NewScraper(logger *slog.Logger, targetIP string, tokenPath string, timeout time.Duration) *Scraper {
 	return &Scraper{
 		tokenPath: tokenPath,
 		timeout:   timeout,
 		targetIP:  targetIP,
-		logger:    logger.With(zap.String("component", "scraper")),
+		logger:    logger.With(slog.String("component", "scraper")),
 		storage: prometheus.NewDesc(
 			prometheus.BuildFQName("kube_pod", "", "ephemeral_storage_used_bytes"),
 			"Ephemeral storage used in bytes",
@@ -56,13 +55,14 @@ func (s *Scraper) Describe(ch chan<- *prometheus.Desc) {
 func (s *Scraper) Collect(ch chan<- prometheus.Metric) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("https://%s:10250/stats/summary", s.targetIP), nil)
 	if err != nil {
-		s.logger.Error("failed to create request", zap.Error(err))
+		s.logger.Error("failed to create request", slog.Any("error", err))
 		return
 	}
 
 	token, err := os.ReadFile(s.tokenPath)
 	if err != nil {
-		s.logger.Fatal("unable to load specified token", zap.String("file", s.tokenPath), zap.Error(err))
+		s.logger.Error("unable to load specified token", slog.String("file", s.tokenPath), slog.Any("error", err))
+		return
 	}
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
@@ -79,7 +79,7 @@ func (s *Scraper) Collect(ch chan<- prometheus.Metric) {
 			s.errCnt,
 			"request error",
 		)
-		s.logger.Warn("failed to make request to stats/summary", zap.Error(err))
+		s.logger.Warn("failed to make request to stats/summary", slog.Any("error", err))
 		return
 	}
 
@@ -91,7 +91,7 @@ func (s *Scraper) Collect(ch chan<- prometheus.Metric) {
 			s.errCnt,
 			"status error",
 		)
-		s.logger.Warn("got unexpected status for stats/summary", zap.String("status", resp.Status))
+		s.logger.Warn("got unexpected status for stats/summary", slog.String("status", resp.Status))
 		return
 	}
 
@@ -105,7 +105,7 @@ func (s *Scraper) Collect(ch chan<- prometheus.Metric) {
 			s.errCnt,
 			"read body error",
 		)
-		s.logger.Error("failed to read body", zap.Error(err))
+		s.logger.Error("failed to read body", slog.Any("error", err))
 		return
 	}
 
@@ -117,7 +117,7 @@ func (s *Scraper) Collect(ch chan<- prometheus.Metric) {
 			s.errCnt,
 			"parse body error",
 		)
-		s.logger.Error("failed to parse body", zap.Error(err))
+		s.logger.Error("failed to parse body", slog.Any("error", err))
 		return
 	}
 
@@ -242,10 +242,12 @@ type Volume struct {
 	*/
 }
 
-func (p *Pod) MarshalLogObject(oe zapcore.ObjectEncoder) error {
+func (p *Pod) LogValue() slog.Value {
 	if p != nil {
-		oe.AddString("name", p.PodRef.Name)
-		oe.AddString("namespace", p.PodRef.Name)
+		return slog.GroupValue(
+			slog.String("name", p.PodRef.Name),
+			slog.String("namespace", p.PodRef.Namespace),
+		)
 	}
-	return nil
+	return slog.AnyValue(nil)
 }
