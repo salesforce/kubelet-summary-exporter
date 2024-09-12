@@ -1,4 +1,4 @@
-# Contributing Guide For {NAME OF PROJECT}
+# Contributing Guide For kubelet-summary-exporter
 
 This page lists the operational governance model of this project, as well as the recommendations and requirements for how to best contribute. We strive to obey these as best as possible. As always, thanks for contributing – we hope these guidelines make it easier and shed some light on our approach and processes.
 
